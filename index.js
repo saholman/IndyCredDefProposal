@@ -373,11 +373,11 @@ let student = {
 }
 
 let studentSchema = {
-    attrs: createStudentSchema(student)
+    attrs: createSchema(student)
 };
 console.log("Schema: ", studentSchema);
 
-let studentCredentialModel = createStudentCredentialModel(student);
+let studentCredentialModel = createCredentialModel(student);
 console.log("Credential Model: ", studentCredentialModel)
 
 /*
@@ -409,14 +409,14 @@ function createSchema(schema) {
                     console.log('Not yet implemented');
                     process.exit(1);
                 } else if(typeof item === "object") {
-                    const subSchema = createStudentSchema(item);
+                    const subSchema = createSchema(item);
                     for(const subSchemaItem of subSchema) {
                         result.push(`${key}[].${subSchemaItem}`);
                     }
                 }
             }
         } else if(typeof schema[key] === "object") {
-            const subSchema = createStudentSchema(schema[key]);
+            const subSchema = createSchema(schema[key]);
             for(const subSchemaItem of subSchema) {
                 result.push(`${key}.${subSchemaItem}`);
             }
@@ -464,7 +464,7 @@ function createCredentialModel(schema) {
             if(Array.isArray(schema[key])) {
                 result.push(`${key}[]`)
             }
-            const subModel = createStudentCredentialModel(schema[key]);
+            const subModel = createCredentialModel(schema[key]);
             for(const subModelItem of subModel) {
                 if(subModelItem.indexOf && subModelItem.indexOf('[]') !== -1 && isNaN(key)) {
                     result.push(`${key}[].${subModelItem}`);
