@@ -345,7 +345,27 @@ kbd {
 
 <h1 id="toc_0">Indy Credential Definition Specification Proposal</h1>
 
-<p>Currently only schemas consisting of a list of attributes are allowed to be used in Indy Credentials.  These conventions would allow any object that can be represented in JSON to be represented as an Indy Credential.  </p>
+<p>
+    Currently only schemas consisting of a list of attributes are allowed to be used in Indy Credentials.
+    This document gives an example of conventions that would allow any object that can be represented in
+    JSON Schema to be represented as an Indy Credential.  The only issue with the current Credential Definition
+    model is that instances of the credential have an unknown length.  Doing something like this with libsodium
+    would be very expensive, but perhaps the next iteration of zkSNARKs would allow us to do something like this.
+</p>
+
+<p>
+    Proof Requests on credentials following this schema would use JSON Path to query specific attributes.  They
+    could also use "Requested Predicates" to assure that two items come from the same scope. For example, below I wouldn't
+    be able to prove that I got an A in Biology.
+</p>
+
+<h2 id="toc_3">Rules and Quirks</h2>
+
+<ul>
+    <li>If nothing appears in the second, third and fourth boxes, the system was unable to convert your JSON object</li>
+    <li>Currently arrays within arrays are not supported, although they will be supported in the official specification</li>
+    <li>Every instance of a schema or subschema (item in an array) must have every attribute, even if that attribute is blank. This part will eventually be automated in the conversion.</li>
+</ul>
 
 <h2 id="toc_1">Example</h2>
 
@@ -358,6 +378,8 @@ kbd {
         "last": "Smith"
     },
     "status": "Good",
+    "age": 27,
+    "isGraduated": true,
     "favoriteColors": [
         "blue",
         "green"
@@ -391,27 +413,18 @@ kbd {
 }
         </textarea></div>
 
-<p>This object would be represented by a schema that looks like:</p>
+<p>This object would be represented by a schema that looks something like:</p>
 
 <div><textarea id="schema" class="w3-input codeBlock" readonly ></textarea></div>
 
-<p>And the credential values would look like:</p>
+<p>And the credential values would look something like:</p>
+
+<div><textarea id="modelValues" class="w3-input codeBlock" readonly ></textarea></div>
+
+<p>The raw credential, with scope GUIDs and types, would look something like: </p>
 
 <div><textarea id="model" class="w3-input codeBlock" readonly ></textarea></div>
 
-<h2 id="toc_2">Advantages</h2>
-
-<ul>
-<li>A deterministic way to flatten any data model to be able to present it as an Indy Credential.</li>
-</ul>
-
-<h2 id="toc_3">Rules and Quirks</h2>
-
-<ul>
-    <li>If nothing appears in the second and third boxes, the system was unable to convert your JSON object</li>
-    <li>Currently arrays within arrays are not supported, although they will be supported in the official specification</li>
-    <li>Every instance of a schema must have every attribute, even if that attribute is blank.</li>
-</ul>
 <script>
     function createSchema(schema) {
         const result = [];
@@ -440,13 +453,12 @@ kbd {
                 }
             } else {
                 console.log(`Type ${typeof student[key]} is not supported`);
-                process.exit(1);
             }
         }
         return Array.from(new Set(result));
     }
 
-    function createCredentialModel(schema) {
+    function createCredentialModelValues(schema) {
         const result = [];
         for(let key of Object.keys(schema)) {
             if(typeof schema[key] === 'string' || typeof schema[key] === 'boolean' || typeof schema[key] === 'number') {
@@ -455,7 +467,7 @@ kbd {
                 if(Array.isArray(schema[key])) {
                     result.push(`${key}[]`)
                 }
-                const subModel = createCredentialModel(schema[key]);
+                const subModel = createCredentialModelValues(schema[key]);
                 for(const subModelItem of subModel) {
                     if(subModelItem.indexOf && subModelItem.indexOf('[]') !== -1 && isNaN(key)) {
                         result.push(`${key}[].${subModelItem}`);
@@ -471,9 +483,44 @@ kbd {
         return result;
     }
 
+    function createCredentialModel(schema, parentScopeGuid) {
+        const result = [];
+        result.push(`{${parentScopeGuid}}`);
+        for(let key of Object.keys(schema)) {
+            let scopeGuid = guid();
+            if(typeof schema[key] === 'string' || typeof schema[key] === 'boolean' || typeof schema[key] === 'number') {
+                result.push(`(${typeof schema[key]})${schema[key]}`);
+            } else if(typeof schema[key] === "object") {
+                const subModel = createCredentialModel(schema[key], `${parentScopeGuid}.${scopeGuid}`);
+                for(const subModelItem of subModel) {
+                    result.push(`${subModelItem}`);
+                }
+            } else {
+                console.log(`Type ${typeof student[key]} is not supported`);
+            }
+        }
+        return result;
+    }
+
+    function guid() {
+        function s4() {
+            return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+        }
+        return s4() + s4();
+    }
+
+    function autoGrow(element) {
+        element.style.height = "50px";
+        element.style.height = (element.scrollHeight)+"px";
+    }
+
     const jsonArea = document.getElementById('json');
     const schemaArea = document.getElementById('schema');
+    const modelValuesArea = document.getElementById('modelValues');
     const modelArea = document.getElementById('model');
+
 
     function updateFields() {
         autoGrow(jsonArea);
@@ -483,19 +530,21 @@ kbd {
         } catch(e) {
             schemaArea.value = ""
         }
-
         autoGrow(schemaArea);
+
         try {
-            modelArea.value = JSON.stringify(createCredentialModel(JSON.parse(jsonArea.value)), null, 4);
+            modelValuesArea.value = JSON.stringify(createCredentialModelValues(JSON.parse(jsonArea.value)), null, 4);
+        } catch(e) {
+            modelValuesArea.value = ""
+        }
+        autoGrow(modelValuesArea);
+
+        try {
+            modelArea.value = JSON.stringify(createCredentialModel(JSON.parse(jsonArea.value), guid()), null, 4);
         } catch(e) {
             modelArea.value = ""
         }
         autoGrow(modelArea);
-    }
-
-    function autoGrow(element) {
-        element.style.height = "50px";
-        element.style.height = (element.scrollHeight)+"px";
     }
 
     updateFields();
