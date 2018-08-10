@@ -411,11 +411,12 @@ kbd {
     <li>If nothing appears in the second and third boxes, the system was unable to convert your JSON object</li>
     <li>Currently arrays within arrays are not supported, although they will be supported in the official specification</li>
     <li>Every instance of a schema must have every attribute, even if that attribute is blank.</li>
+</ul>
 <script>
-    function createStudentSchema(schema) {
+    function createSchema(schema) {
         const result = [];
         for(let key of Object.keys(schema)) {
-            if(typeof schema[key] === "string") {
+            if(typeof schema[key] === 'string' || typeof schema[key] === 'boolean' || typeof schema[key] === 'number') {
                 result.push(key);
             } else if(Array.isArray(schema[key])) {
                 for(const item of schema[key]) {
@@ -445,10 +446,10 @@ kbd {
         return Array.from(new Set(result));
     }
 
-    function createStudentCredentialModel(schema) {
+    function createCredentialModel(schema) {
         const result = [];
         for(let key of Object.keys(schema)) {
-            if(typeof schema[key] === "string") {
+            if(typeof schema[key] === 'string' || typeof schema[key] === 'boolean' || typeof schema[key] === 'number') {
                 result.push(schema[key]);
             } else if(typeof schema[key] === "object") {
                 if(Array.isArray(schema[key])) {
@@ -456,7 +457,7 @@ kbd {
                 }
                 const subModel = createStudentCredentialModel(schema[key]);
                 for(const subModelItem of subModel) {
-                    if(subModelItem.indexOf('[]') !== -1 && isNaN(key)) {
+                    if(subModelItem.indexOf && subModelItem.indexOf('[]') !== -1 && isNaN(key)) {
                         result.push(`${key}[].${subModelItem}`);
                     } else {
                         result.push(subModelItem);
@@ -478,14 +479,14 @@ kbd {
         autoGrow(jsonArea);
 
         try {
-            schemaArea.value = JSON.stringify(createStudentSchema(JSON.parse(jsonArea.value)), null, 4);
+            schemaArea.value = JSON.stringify(createSchema(JSON.parse(jsonArea.value)), null, 4);
         } catch(e) {
             schemaArea.value = ""
         }
 
         autoGrow(schemaArea);
         try {
-            modelArea.value = JSON.stringify(createStudentCredentialModel(JSON.parse(jsonArea.value)), null, 4);
+            modelArea.value = JSON.stringify(createCredentialModel(JSON.parse(jsonArea.value)), null, 4);
         } catch(e) {
             modelArea.value = ""
         }
