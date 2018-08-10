@@ -346,23 +346,23 @@ kbd {
 <h1 id="toc_0">Indy Credential Definition Specification Proposal</h1>
 
 <p>
-    Currently only schemas consisting of a list of attributes are allowed to be used in Indy Credentials.
+    Currently only schemas consisting of a list of attributes are allowed to be used in Indy credentials.
     This document gives an example of conventions that would allow any object that can be represented in
-    JSON Schema to be represented as an Indy Credential.  The only issue with the current Credential Definition
-    model is that instances of the credential have an unknown length.  Doing something like this with libsodium
-    would be very expensive, but perhaps the next iteration of zkSNARKs would allow us to do something like this.
+    JSON Schema to be represented as an Indy credential.  The only difference from the current credential definition
+    model is that instances of the credential have a variable length.  Doing something like this with libsodium
+    would be very expensive, but perhaps the next iteration of zkSNARKs would make it more realistic.
 </p>
 
 <p>
-    Proof Requests on credentials following this schema would use JSON Path to query specific attributes.  They
-    could also use "Requested Predicates" to assure that two items come from the same scope. For example, below I wouldn't
-    be able to prove that I got an A in Biology.
+    Proof requests on credentials following this specification would use JSON Path to query specific attributes.  They
+    could also use "Requested Predicates" to assure that two items come from the same scope. This assures, in the example
+    below, that I wouldn't be able to prove having received an A in Biology.
 </p>
 
 <h2 id="toc_3">Rules and Quirks</h2>
 
 <ul>
-    <li>If nothing appears in the second, third and fourth boxes, the system was unable to convert your JSON object</li>
+    <li>If nothing appears in the second, third, and fourth boxes, the system was unable to convert your JSON object</li>
     <li>Currently arrays within arrays are not supported, although they will be supported in the official specification</li>
     <li>Every instance of a schema or subschema (item in an array) must have every attribute, even if that attribute is blank. This part will eventually be automated in the conversion.</li>
 </ul>
